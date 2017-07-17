@@ -51,6 +51,10 @@ UKF::UKF() {
 
   Hint: one or more values initialized above might be wildly off...
   */
+  
+  n_x_ = 5;
+  n_aug_ = 7;
+
 }
 
 UKF::~UKF() {}
@@ -61,11 +65,77 @@ UKF::~UKF() {}
  */
 void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
   /**
-  TODO:
-
   Complete this function! Make sure you switch between lidar and radar
   measurements.
   */
+  
+  /*****************************************************************************
+   *  Initialization
+   ****************************************************************************/
+  if (!is_initialized_) {
+    /**
+     * Initialize the state x_ with the first measurement.
+     * Create the covariance matrix.
+     * Remember: you'll need to convert radar from polar to cartesian coordinates.
+     */
+    // first measurement
+    x_ = VectorXd(n_x_);
+
+    if (meas_package.sensor_type_ == MeasurementPackage::RADAR) {
+      /**
+       Convert radar from polar to cartesian coordinates and initialize state.
+       */
+      
+      // x = r × cos(θ)
+      // y = r × sin(θ)
+      
+      auto ro = meas_package.raw_measurements_[0];
+      auto theta = meas_package.raw_measurements_[1];
+      x_ << ro * cos(theta), ro * sin(theta), 0.0, 0.0, 0.0;
+    } else if (meas_package.sensor_type_ == MeasurementPackage::LASER) {
+      /**
+       Initialize state.
+       */
+      
+      //set the state with the initial location
+      x_ << meas_package.raw_measurements_[0], meas_package.raw_measurements_[1], 0.0, 0.0, 0.0;
+    }
+    
+    time_us_ = meas_package.timestamp_;
+    
+    // done initializing, no need to predict or update
+    is_initialized_ = true;
+    return;
+  }
+  
+  if (!use_radar_ && meas_package.sensor_type_ == MeasurementPackage::RADAR) {
+    return;
+  }
+  if (!use_laser_ && meas_package.sensor_type_ == MeasurementPackage::LASER) {
+    return;
+  }
+
+  /*****************************************************************************
+   *  Prediction
+   ****************************************************************************/
+  
+  //compute the time elapsed between the current and previous measurements
+  double dt = (meas_package.timestamp_ - time_us_) / 1000000.0;	//dt - expressed in seconds
+  time_us_ = meas_package.timestamp_;
+  
+  Prediction(dt);
+  
+  /*****************************************************************************
+   *  Update
+   ****************************************************************************/
+  
+  if (meas_package.sensor_type_ == MeasurementPackage::RADAR) {
+    // Radar updates
+    UpdateRadar(meas_package);
+  } else if (meas_package.sensor_type_ == MeasurementPackage::LASER) {
+    // Laser updates
+    UpdateLidar(meas_package);
+  }
 }
 
 /**
