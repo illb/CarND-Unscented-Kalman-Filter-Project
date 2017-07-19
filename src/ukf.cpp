@@ -76,11 +76,7 @@ UKF::UKF() {
   lambda_ = 3 - n_aug_;
   
   // initial covariance matrix
-  P_ << 1, 0, 0, 0, 0,
-        0, 1, 0, 0, 0,
-        0, 0, 1, 0, 0,
-        0, 0, 0, 1, 0,
-        0, 0, 0, 0, 1;
+  P_ = MatrixXd::Identity(n_x_, n_x_);
   
   Xsig_pred_ = MatrixXd(n_x_, n_sigma_);
 
