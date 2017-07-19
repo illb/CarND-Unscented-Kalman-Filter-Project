@@ -84,6 +84,16 @@ UKF::UKF() {
   weights_ = VectorXd(n_sigma_);
   weights_.fill(0.5 / (lambda_ + n_aug_));
   weights_(0) = lambda_ / (lambda_ + n_aug_);
+
+  R_laser_ = MatrixXd(2,2);
+  R_laser_ << std_laspx_ * std_laspx_, 0,
+              0, std_laspy_ * std_laspy_;
+
+  R_radar_ = MatrixXd(3, 3);
+  R_radar_ << std_radr_ * std_radr_, 0, 0,
+              0, std_radphi_ * std_radphi_, 0,
+              0, 0, std_radrd_ * std_radrd_;
+
 }
 
 UKF::~UKF() {}
@@ -225,10 +235,7 @@ void UKF::UpdateLidar(MeasurementPackage meas_package) {
   }
   
   //add measurement noise covariance matrix
-  MatrixXd R = MatrixXd(n_z,n_z);
-  R << std_laspx_ * std_laspx_, 0,
-       0, std_laspy_ * std_laspy_;
-  S = S + R;
+  S = S + R_laser_;
   
   //create matrix for cross correlation Tc
   MatrixXd Tc = MatrixXd(n_x_, n_z);
@@ -319,11 +326,7 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
   }
   
   //add measurement noise covariance matrix
-  MatrixXd R = MatrixXd(n_z,n_z);
-  R << std_radr_ * std_radr_, 0, 0,
-       0, std_radphi_ * std_radphi_, 0,
-       0, 0,std_radrd_ * std_radrd_;
-  S = S + R;
+  S = S + R_radar_;
   
   //create matrix for cross correlation Tc
   MatrixXd Tc = MatrixXd(n_x_, n_z);
