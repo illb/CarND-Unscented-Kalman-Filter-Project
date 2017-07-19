@@ -80,17 +80,10 @@ UKF::UKF() {
   
   Xsig_pred_ = MatrixXd(n_x_, n_sigma_);
 
-  //create vector for weights
+  //init weights
   weights_ = VectorXd(n_sigma_);
-  
-  // set weights
-  double weight_0 = lambda_ / (lambda_ + n_aug_);
-  weights_(0) = weight_0;
-  for (int i = 1; i < n_sigma_; i++) {  //2n+1 weights
-    double weight = 0.5 / (n_aug_ + lambda_);
-    weights_(i) = weight;
-  }
-  
+  weights_.fill(lambda_ + n_aug_);
+  weights_(0) = lambda_ / (lambda_ + n_aug_);
 }
 
 UKF::~UKF() {}
