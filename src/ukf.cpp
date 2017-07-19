@@ -82,7 +82,7 @@ UKF::UKF() {
 
   //init weights
   weights_ = VectorXd(n_sigma_);
-  weights_.fill(lambda_ + n_aug_);
+  weights_.fill(0.5 / (lambda_ + n_aug_));
   weights_(0) = lambda_ / (lambda_ + n_aug_);
 }
 
